@@ -1,0 +1,167 @@
+import { useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  Clock, 
+  Settings, 
+  LogOut, 
+  Menu,
+  X,
+  Moon,
+  Sun,
+  Monitor,
+  User
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "./ThemeProvider";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+
+const navigation = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "My Entries", href: "/entries", icon: Clock },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+  const { logout, user } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logout successful",
+      description: "You have been logged out successfully.",
+    });
+    navigate("/login");
+  };
+
+  const toggleTheme = () => {
+    if (theme === "light") {
+      setTheme("dark");
+    } else if (theme === "dark") {
+      setTheme("system");
+    } else {
+      setTheme("light");
+    }
+  };
+
+  const getThemeIcon = () => {
+    switch (theme) {
+      case "light":
+        return <Sun className="h-4 w-4" />;
+      case "dark":
+        return <Moon className="h-4 w-4" />;
+      default:
+        return <Monitor className="h-4 w-4" />;
+    }
+  };
+
+  return (
+    <div className={`chronos-sidebar h-screen flex flex-col transition-all duration-300 ${
+      collapsed ? "w-16" : "w-64"
+    }`}>
+      {/* Header */}
+      <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
+        {!collapsed && (
+          <div className="flex items-center">
+            <img 
+              src="/assets/logo_chronos.png" 
+              alt="Chronos Logo" 
+              className="h-12 w-12"
+            />
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-sidebar-foreground hover:bg-sidebar-hover"
+        >
+          {collapsed ? (
+            <img 
+              src="/assets/logo_chronos.png" 
+              alt="Chronos Logo" 
+              className="h-5 w-5"
+            />
+          ) : (
+            <X className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {navigation.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-hover"
+              }`}
+            >
+              <item.icon className={`h-5 w-5 ${collapsed ? "" : "mr-3"}`} />
+              {!collapsed && <span>{item.name}</span>}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* User Info */}
+      {user && !collapsed && (
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                <User className="h-4 w-4 text-primary-foreground" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user.first_name} {user.last_name}
+              </p>
+              <p className="text-xs text-sidebar-muted truncate">
+                {user.email}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="p-4 border-t border-sidebar-border space-y-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleTheme}
+          className={`w-full justify-start text-sidebar-foreground hover:bg-sidebar-hover ${
+            collapsed ? "px-2" : ""
+          }`}
+        >
+          {getThemeIcon()}
+          {!collapsed && <span className="ml-3">Theme</span>}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          className={`w-full justify-start text-sidebar-foreground hover:bg-sidebar-hover ${
+            collapsed ? "px-2" : ""
+          }`}
+        >
+          <LogOut className={`h-4 w-4 ${collapsed ? "" : "mr-3"}`} />
+          {!collapsed && <span>Log Out</span>}
+        </Button>
+      </div>
+    </div>
+  );
+}
