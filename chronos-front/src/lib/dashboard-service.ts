@@ -90,7 +90,7 @@ class DashboardService {
         dat_start: dateStart,
         dat_end: dateEnd,
       });
-      const response = await apiClient.get<EntriesResponse>(`/api/entries?${queryParams}`);
+      const response = await apiClient.get<EntriesResponse>(`/api/entries/?${queryParams}`);
       return response;
     } catch (error) {
 
@@ -109,7 +109,7 @@ class DashboardService {
         queryParams.append('require_total_count', 'true');
       }
       
-      const response = await apiClient.get<EntriesResponse>(`/api/entries?${queryParams}`);
+      const response = await apiClient.get<EntriesResponse>(`/api/entries/?${queryParams}`);
       return response;
     } catch (error) {
 
@@ -138,7 +138,7 @@ class DashboardService {
 
   async createEntry(entryData: CreateEntryRequest): Promise<void> {
     try {
-      await apiClient.post('/api/entries', entryData);
+      await apiClient.post('/api/entries/', entryData);
     } catch (error) {
 
       throw error;
@@ -147,7 +147,7 @@ class DashboardService {
 
   async deleteEntry(entryId: number): Promise<DeleteEntryResponse> {
     try {
-      const response = await apiClient.delete<DeleteEntryResponse>(`/api/entries?entry_id=${entryId}`);
+      const response = await apiClient.delete<DeleteEntryResponse>(`/api/entries/?entry_id=${entryId}`);
       return response;
     } catch (error) {
 
