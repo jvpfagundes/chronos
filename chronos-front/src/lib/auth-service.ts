@@ -11,7 +11,7 @@ import {
   UpdateUserResponse,
   OnboardingResponse
 } from './types';
-import { extractUserFromJWT } from './jwt-utils';
+import { extractUserFromJWT, decodeJWT } from './jwt-utils';
 
 class AuthService {
   private userInfo: UserInfo | null = null;
@@ -25,27 +25,52 @@ class AuthService {
         credentials
       );
       
+
+      if (!response.access_token) {
+        throw new Error('Login falhou: Token não recebido');
+      }
+      
       this.saveAuthData(response);
 
       return response;
     } catch (error) {
-
       throw this.handleAuthError(error);
     }
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>(
+
+      const registerResponse = await apiClient.post<AuthResponse>(
         this.REGISTER_ENDPOINT,
         userData
       );
 
-      this.saveAuthData(response);
 
-      return response;
+
+      const loginCredentials: LoginRequest = {
+        username: userData.email,
+        password: userData.password
+      };
+
+      const loginResponse = await apiClient.post<AuthResponse>(
+        this.LOGIN_ENDPOINT,
+        loginCredentials
+      );
+
+
+      if (!loginResponse.access_token) {
+        throw new Error('Login automático falhou após registro');
+      }
+      
+      this.saveAuthData(loginResponse);
+
+      return loginResponse;
     } catch (error) {
 
+      if (error instanceof Error && error.message.includes('Login automático falhou')) {
+        throw new Error('Registro realizado com sucesso, mas falha no login automático. Tente fazer login manualmente.');
+      }
       throw this.handleAuthError(error);
     }
   }
@@ -142,7 +167,15 @@ class AuthService {
       return false;
     }
 
-    return new Date().getTime() < expiresAt;
+
+    const isValid = new Date().getTime() < expiresAt;
+    
+    if (!isValid) {
+
+      this.logout();
+    }
+    
+    return isValid;
   }
 
   getToken(): string | null {
@@ -183,6 +216,13 @@ class AuthService {
     const userInfo = extractUserFromJWT(authResponse.access_token);
     if (userInfo) {
       this.updateUserInfo(userInfo);
+    }
+    
+
+    const decoded = decodeJWT(authResponse.access_token);
+    if (decoded && decoded.is_first_access !== undefined) {
+      const isFirstAccess = decoded.is_first_access === true || decoded.is_first_access === 'true';
+      localStorage.setItem('is_first_access', isFirstAccess.toString());
     }
     
     const expiresAt = new Date().getTime() + (24 * 60 * 60 * 1000);

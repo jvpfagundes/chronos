@@ -101,7 +101,6 @@ export default function Dashboard() {
           value={isLoading ? "..." : `${((dashboardData?.cardsData?.total_logged || 0) / 3600).toFixed(1)}h`}
           description={`Hours logged ${selectedPeriod === 'custom' ? 'in selected period' : `this ${selectedPeriod}`}`}
           icon={Clock}
-          trend={{ value: 12, isPositive: true }}
         />
         <StatsCard
           title={`${getPeriodDisplayName(selectedPeriod)} Goal`}
@@ -114,7 +113,6 @@ export default function Dashboard() {
           value={isLoading ? "..." : `${dashboardData?.streak || 0} days`}
           description="Consecutive days with entries"
           icon={Zap}
-          trend={{ value: 25, isPositive: true }}
         />
         <StatsCard
           title="Missing Days"

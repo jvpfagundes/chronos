@@ -7,14 +7,16 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, token } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate('/login');
+    if (!loading) {
+      if (!isAuthenticated || !token) {
+        navigate('/login');
+      }
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, loading, navigate, token]);
 
   if (loading) {
     return (
@@ -33,7 +35,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !token) {
     return null;
   }
 

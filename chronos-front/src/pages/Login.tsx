@@ -41,11 +41,21 @@ export default function Login() {
 
     try {
       await login(loginData);
-      toast({
-        title: "Success!",
-        description: "Login successful.",
-      });
-      navigate(isFirstAccess ? "/onboarding" : "/dashboard");
+      
+
+      if (isFirstAccess) {
+        toast({
+          title: "Success!",
+          description: "Login successful. Redirecting to onboarding...",
+        });
+        navigate("/onboarding");
+      } else {
+        toast({
+          title: "Success!",
+          description: "Login successful. Redirecting to dashboard...",
+        });
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast({
         title: "Login Error",
@@ -79,11 +89,21 @@ export default function Login() {
     try {
       const { confirmPassword, ...registerData } = signUpData;
       await register(registerData);
-      toast({
-        title: "Success!",
-        description: "Account created successfully. You have been logged in automatically.",
-      });
-      navigate(isFirstAccess ? "/onboarding" : "/dashboard");
+      
+
+      if (isFirstAccess) {
+        toast({
+          title: "Success!",
+          description: "Account created successfully. Redirecting to onboarding...",
+        });
+        navigate("/onboarding");
+      } else {
+        toast({
+          title: "Success!",
+          description: "Account created successfully. Redirecting to dashboard...",
+        });
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast({
         title: "Registration Error",

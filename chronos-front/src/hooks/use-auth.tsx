@@ -64,8 +64,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     try {
       const response = await authService.login(credentials);
+      
+
+      if (!response.access_token) {
+        throw new Error('Login falhou: Token não recebido');
+      }
+      
       const user = authService.getUserInfo();
       const isFirstAccess = authService.isFirstAccess();
+      
+
       
       setAuthState({
         isAuthenticated: true,
@@ -85,8 +93,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     try {
       const response = await authService.register(userData);
+      
+
+      if (!response.access_token) {
+        throw new Error('Registro falhou: Token não recebido');
+      }
+      
       const user = authService.getUserInfo();
       const isFirstAccess = authService.isFirstAccess();
+      
+
       
       setAuthState({
         isAuthenticated: true,

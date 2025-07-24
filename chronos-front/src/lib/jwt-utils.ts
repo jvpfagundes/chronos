@@ -22,6 +22,10 @@ export function extractUserFromJWT(token: string): UserInfo | null {
     const decoded = decodeJWT(token);
     if (!decoded) return null;
     
+
+    const isFirstAccess = decoded.is_first_access === true || decoded.is_first_access === 'true';
+    localStorage.setItem('is_first_access', isFirstAccess.toString());
+    
     return {
       id: decoded.user_id || 0,
       email: decoded.email || '',
@@ -33,7 +37,7 @@ export function extractUserFromJWT(token: string): UserInfo | null {
       theme: decoded.theme || 'light',
     };
   } catch (error) {
-
+    console.error('Error extracting user from JWT:', error);
     return null;
   }
 } 
