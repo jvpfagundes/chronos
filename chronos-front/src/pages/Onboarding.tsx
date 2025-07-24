@@ -107,26 +107,26 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-2xl">
         {/* Progress Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-2 mb-8">
+        <div className="text-center mb-6 md:mb-8">
+          <div className="flex items-center justify-center space-x-2 mb-6 md:mb-8">
             <img 
               src="/assets/logo_chronos.png" 
               alt="Chronos Logo" 
-              className="h-16 w-16"
+              className="h-12 w-12 md:h-16 md:w-16"
             />
             <img 
               src="/assets/logo_chronos_text.png" 
               alt="Chronos" 
-              className="h-12"
+              className="h-10 md:h-12"
             />
           </div>
-          <h1 className="text-3xl font-semibold text-foreground mb-2">
+          <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
             Let's set up your workspace
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm md:text-base">
             Help us customize Chronos to fit your working style
           </p>
           

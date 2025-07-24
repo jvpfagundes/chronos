@@ -73,11 +73,11 @@ export function EntriesTable() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
                     <TableHead>Title</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Time</TableHead>
+                    <TableHead className="hidden lg:table-cell">Description</TableHead>
+                    <TableHead className="hidden md:table-cell">Project</TableHead>
+                    <TableHead className="hidden lg:table-cell">Time</TableHead>
                     <TableHead className="text-right">Duration</TableHead>
                     <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
@@ -85,21 +85,21 @@ export function EntriesTable() {
                 <TableBody>
                   {entries.map((entry, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium hidden md:table-cell">
                         {formatDateLong(entry.entrie_date)}
                       </TableCell>
-                      <TableCell className="font-medium max-w-[200px] truncate">
+                      <TableCell className="font-medium max-w-[150px] md:max-w-[200px] truncate">
                         {entry.title}
                       </TableCell>
-                      <TableCell className="max-w-[300px] truncate">
+                      <TableCell className="max-w-[200px] lg:max-w-[300px] truncate hidden lg:table-cell">
                         {entry.description}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-light text-primary">
                           {entry.project_name || "No Project"}
                         </span>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">
                         <div>
                           <div>{formatTime(entry.datm_start)}–{formatTime(entry.datm_end)}</div>
                           {entry.datm_interval_start && entry.datm_interval_end && (
@@ -113,22 +113,22 @@ export function EntriesTable() {
                         {formatDuration(entry.duration)}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1 md:space-x-2">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(entry.id)}
-                            className="h-8 w-8 p-0"
+                            className="h-7 w-7 md:h-8 md:w-8 p-0"
                           >
-                            <Edit2 className="h-4 w-4" />
+                            <Edit2 className="h-3 w-3 md:h-4 md:w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(entry.id, entry.title)}
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            className="h-7 w-7 md:h-8 md:w-8 p-0 text-destructive hover:text-destructive"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                           </Button>
                         </div>
                       </TableCell>

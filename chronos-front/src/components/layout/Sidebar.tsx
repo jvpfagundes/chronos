@@ -23,7 +23,11 @@ const navigation = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -76,22 +80,34 @@ export function Sidebar() {
             />
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-sidebar-foreground hover:bg-sidebar-hover"
-        >
-          {collapsed ? (
-            <img 
-              src="/assets/logo_chronos.png" 
-              alt="Chronos Logo" 
-              className="h-5 w-5"
-            />
-          ) : (
-            <X className="h-4 w-4" />
+        <div className="flex items-center space-x-2">
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-sidebar-foreground hover:bg-sidebar-hover md:hidden"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           )}
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-sidebar-foreground hover:bg-sidebar-hover hidden md:block"
+          >
+            {collapsed ? (
+              <img 
+                src="/assets/logo_chronos.png" 
+                alt="Chronos Logo" 
+                className="h-5 w-5"
+              />
+            ) : (
+              <X className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -102,6 +118,7 @@ export function Sidebar() {
             <NavLink
               key={item.name}
               to={item.href}
+              onClick={onClose}
               className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-primary text-primary-foreground"

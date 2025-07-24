@@ -133,11 +133,11 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-semibold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Settings</h1>
+        <p className="text-muted-foreground text-sm md:text-base">
           Customize your Chronos experience
         </p>
       </div>

@@ -84,6 +84,7 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: any, options?: RequestInit): Promise<T> {
+    console.log(this.baseURL)
     return this.makeRequest<T>(endpoint, {
       ...options,
       method: 'POST',

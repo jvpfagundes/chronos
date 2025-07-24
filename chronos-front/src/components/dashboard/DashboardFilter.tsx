@@ -134,13 +134,13 @@ export function DashboardFilter({
       <CardContent>
         <div className="space-y-4">
           {/* Period Type Selection */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">Period:</span>
             </div>
             <Select value={selectedPeriod} onValueChange={(value: TimeFilterPeriod) => onPeriodChange(value)}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
@@ -155,11 +155,11 @@ export function DashboardFilter({
 
           {/* Specific Period Selectors */}
           {selectedPeriod === 'monthly' && (
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-muted-foreground">Month:</span>
                 <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -174,7 +174,7 @@ export function DashboardFilter({
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-muted-foreground">Year:</span>
                 <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
-                  <SelectTrigger className="w-[100px]">
+                  <SelectTrigger className="w-full sm:w-[100px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -244,7 +244,7 @@ export function DashboardFilter({
           )}
 
           {selectedPeriod === 'custom' && (
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-muted-foreground">From:</span>
                 <Input
@@ -254,7 +254,7 @@ export function DashboardFilter({
                     const newStartDate = new Date(e.target.value);
                     onDateRangeChange({ ...dateRange, startDate: newStartDate });
                   }}
-                  className="w-[150px]"
+                  className="w-full sm:w-[150px]"
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -266,7 +266,7 @@ export function DashboardFilter({
                     const newEndDate = new Date(e.target.value);
                     onDateRangeChange({ ...dateRange, endDate: newEndDate });
                   }}
-                  className="w-[150px]"
+                  className="w-full sm:w-[150px]"
                 />
               </div>
             </div>

@@ -114,26 +114,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray950 px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray950 px-4 py-8">
+      <div className="w-full max-w-md space-y-6 md:space-y-8">
         {/* Logo */}
         <div className="text-center">
-          <div className="flex items-center justify-center space-x-1 mb-6">
+          <div className="flex items-center justify-center space-x-1 mb-4 md:mb-6">
             <img 
               src="/assets/logo_chronos.png" 
               alt="Chronos Logo" 
-              className="h-16 w-16"
+              className="h-12 w-12 md:h-16 md:w-16"
             />
             <img 
               src="/assets/logo_chronos_text.png"
               alt="Chronos" 
-              className="h-20"
+              className="h-16 md:h-20"
             />
           </div>
-          <h2 className="text-2xl font-semibold text-foreground">
+          <h2 className="text-xl md:text-2xl font-semibold text-foreground">
             Welcome to Chronos
           </h2>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Track your time with precision and clarity
           </p>
         </div>

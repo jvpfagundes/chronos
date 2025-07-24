@@ -60,11 +60,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-semibold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground text-sm md:text-base">
           Welcome back! Here's your time tracking overview.
         </p>
       </div>
@@ -95,7 +95,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         <StatsCard
           title={`${getPeriodDisplayName(selectedPeriod)} Hours`}
           value={isLoading ? "..." : `${((dashboardData?.cardsData?.total_logged || 0) / 3600).toFixed(1)}h`}

@@ -340,7 +340,7 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-auto">
         <DialogHeader>
           <DialogTitle>Add New Entry</DialogTitle>
         </DialogHeader>
