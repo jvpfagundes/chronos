@@ -25,6 +25,7 @@ class UserUpdate(BaseModel):
     monthly_goal: Optional[int] = None
     week_days_list: Optional[list[str]] = None
     theme: Optional[str] = None
+    language: Optional[str] = None
 
 
 class User(UserBase):

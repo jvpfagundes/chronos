@@ -37,7 +37,8 @@ class AuthService(SQLQueryAsync):
                    monthly_goal,
                    daily_goal,
                    week_day_list,
-                   theme
+                   theme,
+                   users.language
             FROM users 
             WHERE email = :email AND status = true
         """
@@ -129,14 +130,15 @@ class AuthService(SQLQueryAsync):
         await self.update("users", dict_update=dict_onboarding, dict_filter={"id": user_id})
 
     @Response(desc_error="Error when updating user.", return_list=[])
-    async def patch_user(self, first_name, last_name, week_days_list, theme, daily_goal, monthly_goal, user_id):
+    async def patch_user(self, first_name, last_name, week_days_list, theme, daily_goal, monthly_goal, user_id, language):
         dict_user_patch = {
             "first_name": first_name,
             "last_name": last_name,
             "week_day_list": json.dumps(week_days_list),
             "theme": theme,
             "daily_goal": daily_goal,
-            "monthly_goal": monthly_goal
+            "monthly_goal": monthly_goal,
+            "language": language
         }
 
         dict_user_patch = {k:v for k, v in dict_user_patch.items() if v not in ('null', None)}

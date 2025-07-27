@@ -20,6 +20,7 @@ async def create_tables():
         updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         deleted_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         week_day_list jsonb,
+        language VARCHAR(255)
     );
     """
 

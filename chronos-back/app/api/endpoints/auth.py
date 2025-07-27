@@ -49,6 +49,7 @@ async def login(
         "daily_goal": user["daily_goal"],
         "week_days_list":user["week_day_list"],
         "theme": user["theme"],
+        "language": user["language"]
 
     })
     return {"access_token": access_token, "token_type": "bearer"}
@@ -77,6 +78,7 @@ async def patch_user(
 
     response = await AuthService().patch_user(first_name=user_data.first_name, last_name=user_data.last_name,
                                               monthly_goal=user_data.monthly_goal, daily_goal=user_data.daily_goal,
-                                              theme=user_data.theme, user_id=user_id, week_days_list=user_data.week_days_list)
+                                              theme=user_data.theme, user_id=user_id, week_days_list=user_data.week_days_list,
+                                              language=user_data.language)
 
     return JSONResponse(content=response, status_code=response['status_code'])
