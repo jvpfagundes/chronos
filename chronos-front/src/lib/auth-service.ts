@@ -225,7 +225,10 @@ class AuthService {
       localStorage.setItem('is_first_access', isFirstAccess.toString());
     }
     
-    const expiresAt = new Date().getTime() + (24 * 60 * 60 * 1000);
+    const expiresAt = decoded && decoded.exp 
+      ? decoded.exp * 1000 
+      : new Date().getTime() + (24 * 60 * 60 * 1000);
+      
     localStorage.setItem('auth_expires_at', expiresAt.toString());
   }
 
