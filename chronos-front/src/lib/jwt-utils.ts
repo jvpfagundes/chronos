@@ -35,6 +35,7 @@ export function extractUserFromJWT(token: string): UserInfo | null {
       daily_goal: decoded.daily_goal ? Number(decoded.daily_goal) : undefined,
       week_days_list: decoded.week_days_list || undefined,
       theme: decoded.theme || 'light',
+      language: decoded.language || 'en',
     };
   } catch (error) {
     console.error('Error extracting user from JWT:', error);

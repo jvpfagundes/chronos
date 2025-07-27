@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { authService } from '@/lib/auth-service';
 import { LoginRequest, RegisterRequest, UserInfo, AuthState, OnboardingRequest } from '@/lib/types';
+import { useTranslation } from 'react-i18next';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginRequest) => Promise<void>;
@@ -26,7 +27,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     token: null,
     loading: true,
   });
-
+  const { i18n } = useTranslation();
   const [isFirstAccess, setIsFirstAccess] = useState(false);
 
   useEffect(() => {
@@ -36,6 +37,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const user = authService.getUserInfo();
         const token = authService.getToken();
         const firstAccess = authService.isFirstAccess();
+
+        if (user?.language) {
+          i18n.changeLanguage(user.language);
+        }
 
         setAuthState({
           isAuthenticated,
@@ -73,7 +78,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const user = authService.getUserInfo();
       const isFirstAccess = authService.isFirstAccess();
       
-
+      if (user?.language) {
+        i18n.changeLanguage(user.language);
+      }
       
       setAuthState({
         isAuthenticated: true,
@@ -102,7 +109,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const user = authService.getUserInfo();
       const isFirstAccess = authService.isFirstAccess();
       
-
+      if (user?.language) {
+        i18n.changeLanguage(user.language);
+      }
       
       setAuthState({
         isAuthenticated: true,
@@ -122,6 +131,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await authService.completeOnboarding(data);
       const user = authService.getUserInfo();
       const isFirstAccess = authService.isFirstAccess();
+      
+      if (user?.language) {
+        i18n.changeLanguage(user.language);
+      }
       
       setAuthState(prev => ({
         ...prev,

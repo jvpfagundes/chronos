@@ -5,6 +5,7 @@ import { Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { dashboardService } from "@/lib/dashboard-service";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 interface DeleteEntryModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export function DeleteEntryModal({ isOpen, onClose, onSuccess, entryId, entryTit
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const handleDelete = async () => {
     setIsLoading(true);
@@ -25,8 +27,8 @@ export function DeleteEntryModal({ isOpen, onClose, onSuccess, entryId, entryTit
       await dashboardService.deleteEntry(entryId);
       
       toast({
-        title: "Entry deleted",
-        description: "The entry has been successfully deleted.",
+        title: t('deleteEntryModal.successTitle'),
+        description: t('deleteEntryModal.successDescription'),
       });
       
       onSuccess();
@@ -38,9 +40,9 @@ export function DeleteEntryModal({ isOpen, onClose, onSuccess, entryId, entryTit
       queryClient.invalidateQueries({ queryKey: ['entries-total-count'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete entry. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : t('deleteEntryModal.errorDescription');
       toast({
-        title: "Error",
+        title: t('deleteEntryModal.errorTitle'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -61,10 +63,10 @@ export function DeleteEntryModal({ isOpen, onClose, onSuccess, entryId, entryTit
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            <span>Delete Entry</span>
+            <span>{t('deleteEntryModal.title')}</span>
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete the entry "{entryTitle}"? This action cannot be undone.
+            {t('deleteEntryModal.confirmation', { entryTitle: entryTitle })}
           </DialogDescription>
         </DialogHeader>
 
@@ -74,7 +76,7 @@ export function DeleteEntryModal({ isOpen, onClose, onSuccess, entryId, entryTit
             onClick={handleClose}
             disabled={isLoading}
           >
-            Cancel
+            {t('deleteEntryModal.cancelButton')}
           </Button>
           <Button
             variant="destructive"
@@ -84,10 +86,10 @@ export function DeleteEntryModal({ isOpen, onClose, onSuccess, entryId, entryTit
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Deleting...
+                {t('deleteEntryModal.deleting')}
               </>
             ) : (
-              "Delete"
+              t('deleteEntryModal.deleteButton')
             )}
           </Button>
         </div>

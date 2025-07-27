@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,22 @@ import { cn, formatDateLong, formatTime, formatDuration } from "@/lib/utils";
 import { useEntriesPaginated } from "@/hooks/use-entries";
 import { AddEntryModal } from "@/components/dashboard/AddEntryModal";
 import { DeleteEntryModal } from "@/components/dashboard/DeleteEntryModal";
+import { Entry } from "@/lib/types";
+import { EntriesTable } from "@/components/dashboard/EntriesTable";
+import { DateRange } from "react-day-picker";
+import { useTranslation } from "react-i18next";
+import { useMobile } from "@/hooks/use-mobile";
+import { EntryCard } from "@/components/dashboard/EntryCard";
 
 export default function Entries() {
+  const { t } = useTranslation();
+  const isMobile = useMobile();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [date, setDate] = useState<Date>();
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     entryId: number;
@@ -33,10 +43,28 @@ export default function Entries() {
 
   const { entries, totalCount, isLoading, error } = useEntriesPaginated(
       offset,
-      limit
+      limit,
+      debouncedSearchTerm,
+      dateRange
   );
 
   const totalPages = Math.ceil(totalCount / limit);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [dateRange]);
+
 
   const handleAddSuccess = () => {
     // Invalidate queries or refetch data
@@ -48,8 +76,9 @@ export default function Entries() {
     }
   };
 
-  const handleEdit = (entryId: number) => {
-    // Logic to show an edit modal or navigate to an edit page
+  const handleEdit = (entry: Entry) => {
+    setEditingEntry(entry);
+    setShowAddModal(true);
   };
 
   const handleDelete = (entryId: number, entryTitle: string) => {
@@ -72,54 +101,21 @@ export default function Entries() {
     });
   };
 
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingEntry(null);
+  }
+
   return (
       <div className="p-4 md:p-6 space-y-4 md:space-y-6 h-full overflow-y-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">My Entries</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t("entries.title")}</h1>
             <p className="text-muted-foreground text-sm">
-              Manage and track your time entries
+              {t("entries.description")}
             </p>
           </div>
         </div>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Search entries..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                />
-              </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                      variant="outline"
-                      className={cn(
-                          "w-full md:w-[240px] justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                      )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Filter by date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
@@ -127,16 +123,54 @@ export default function Entries() {
               <div>
                 <CardTitle className="flex items-center">
                   <Clock className="h-5 w-5 mr-2 text-primary" />
-                  All Entries
+                  {t("entries.allEntries")}
                 </CardTitle>
                 <CardDescription className="mt-1">
-                  Showing {entries.length > 0 ? offset + 1 : 0}-{Math.min(offset + limit, totalCount)} of {totalCount} entries
+                  {t("entries.showingEntries", { from: entries.length > 0 ? offset + 1 : 0, to: Math.min(offset + limit, totalCount), total: totalCount })}
                 </CardDescription>
               </div>
-              <Button onClick={() => setShowAddModal(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Entry
-              </Button>
+              <div className="flex flex-col md:flex-row md:items-center gap-2">
+                <Input
+                    placeholder={t("entries.searchPlaceholder")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        className="w-full md:w-[280px] justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange?.from ? (
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                            {format(dateRange.to, "LLL dd, y")}
+                          </>
+                        ) : (
+                          format(dateRange.from, "LLL dd, y")
+                        )
+                      ) : (
+                        <span>{t("entries.pickDateRange")}</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={setDateRange}
+                        initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Button onClick={() => setShowAddModal(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t("entries.addEntry")}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0 md:p-6 md:pt-0">
@@ -146,98 +180,45 @@ export default function Entries() {
                 </div>
             ) : error ? (
                 <div className="text-center py-12">
-                  <p className="text-destructive">Error loading entries: {error}</p>
+                  <p className="text-destructive">{t("entries.errorLoading", { error: error })}</p>
                 </div>
             ) : entries.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No entries found.</p>
+                  <p className="text-muted-foreground">{t("entries.noEntriesFound")}</p>
                   <Button onClick={() => setShowAddModal(true)} className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Entry
+                    {t("entries.addFirstEntry")}
                   </Button>
                 </div>
             ) : (
                 <>
-                  {/* Mobile View */}
-                  <div className="md:hidden">
+                  {isMobile ? (
                     <div className="space-y-4 p-4">
                       {entries.map((entry) => (
-                          <div key={entry.id} className="bg-background border p-4 rounded-lg">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="flex-1 space-y-1">
-                                <p className="font-semibold text-foreground truncate pr-2">{entry.title}</p>
-                                <p className="text-sm text-muted-foreground">{formatDateLong(entry.entrie_date)}</p>
-                              </div>
-                              <div className="flex items-center">
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(entry.id)} className="h-8 w-8">
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id, entry.title)} className="h-8 w-8 text-destructive hover:text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-end">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                             {entry.project_name || "No Project"}
-                           </span>
-                              <p className="text-xl font-bold text-foreground">{formatDuration(entry.duration)}</p>
-                            </div>
-                          </div>
+                        <EntryCard
+                          key={entry.id}
+                          entry={entry}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
                       ))}
                     </div>
-                  </div>
-
-                  {/* Desktop View */}
-                  <div className="hidden md:block rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Title</TableHead>
-                          <TableHead className="hidden lg:table-cell">Project</TableHead>
-                          <TableHead className="hidden lg:table-cell">Time</TableHead>
-                          <TableHead className="text-right">Duration</TableHead>
-                          <TableHead className="w-[100px] text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {entries.map((entry) => (
-                            <TableRow key={entry.id}>
-                              <TableCell className="font-medium">{formatDateLong(entry.entrie_date)}</TableCell>
-                              <TableCell>
-                                <div className="font-medium max-w-[250px] truncate">{entry.title}</div>
-                                <div className="text-muted-foreground text-xs max-w-[250px] truncate hidden lg:block">{entry.description}</div>
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary/10 text-primary">
-                            {entry.project_name || "No Project"}
-                          </span>
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">
-                                <div>{formatTime(entry.datm_start)}–{formatTime(entry.datm_end)}</div>
-                              </TableCell>
-                              <TableCell className="text-right font-medium">{formatDuration(entry.duration)}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center justify-center space-x-1">
-                                  <Button variant="ghost" size="icon" onClick={() => handleEdit(entry.id)} className="h-8 w-8">
-                                    <Edit2 className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id, entry.title)} className="h-8 w-8 text-destructive hover:text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                        <EntriesTable
+                            entries={entries}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    </div>
+                  )}
 
                   {totalPages > 1 && (
                       <div className="flex items-center justify-between mt-4 px-4 pb-4 md:px-0 md:pb-0">
                         <div className="text-sm text-muted-foreground">
-                          Page {currentPage} of {totalPages}
+                          {t("entries.pageOf", { currentPage: currentPage, totalPages: totalPages })}
                         </div>
                         <div className="flex items-center space-x-2">
                           <Button
@@ -247,7 +228,7 @@ export default function Entries() {
                               disabled={currentPage === 1}
                           >
                             <ChevronLeft className="h-4 w-4 mr-1" />
-                            Prev
+                            {t("entries.prev")}
                           </Button>
                           <Button
                               variant="outline"
@@ -255,7 +236,7 @@ export default function Entries() {
                               onClick={() => handlePageChange(currentPage + 1)}
                               disabled={currentPage === totalPages}
                           >
-                            Next
+                            {t("entries.next")}
                             <ChevronRight className="h-4 w-4 ml-1" />
                           </Button>
                         </div>
@@ -268,8 +249,9 @@ export default function Entries() {
 
         <AddEntryModal
             isOpen={showAddModal}
-            onClose={() => setShowAddModal(false)}
+            onClose={handleCloseModal}
             onSuccess={handleAddSuccess}
+            entryToEdit={editingEntry}
         />
 
         <DeleteEntryModal

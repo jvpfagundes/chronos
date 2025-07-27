@@ -5,6 +5,7 @@ import { EntryDay } from "@/lib/dashboard-service";
 import { formatDate } from "@/lib/utils";
 import { AddEntryModal } from "./AddEntryModal";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface RecentDaysCardProps {
   recentDays?: EntryDay[];
@@ -14,6 +15,7 @@ interface RecentDaysCardProps {
 }
 
 export function RecentDaysCard({ recentDays = [], isLoading = false, weekDaysList = [], onEntryAdded }: RecentDaysCardProps) {
+  const { t } = useTranslation();
   const [addModal, setAddModal] = useState<{
     isOpen: boolean;
     selectedDate: Date | null;
@@ -75,7 +77,7 @@ export function RecentDaysCard({ recentDays = [], isLoading = false, weekDaysLis
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Calendar className="h-5 w-5 text-primary" />
-            <span>Last 7 Days</span>
+            <span>{t('recentDaysCard.title')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -85,7 +87,7 @@ export function RecentDaysCard({ recentDays = [], isLoading = false, weekDaysLis
             </div>
           ) : recentDays.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No data available for this period</p>
+              <p className="text-muted-foreground">{t('recentDaysCard.noData')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -106,15 +108,15 @@ export function RecentDaysCard({ recentDays = [], isLoading = false, weekDaysLis
                         <div>
                           <p className={`text-sm font-medium ${!day.have_entries ? 'text-muted-foreground' : ''}`}>
                             {formatDate(day.day)}
-                            {today && <span className="ml-1 text-xs text-primary">(Today)</span>}
+                            {today && <span className="ml-1 text-xs text-primary">{t('recentDaysCard.today')}</span>}
                           </p>
                           {day.have_entries && day.daily_duration ? (
                             <p className="text-xs text-muted-foreground">
-                              {(day.daily_duration / 3600).toFixed(1)}h logged
+                              {t('recentDaysCard.logged', { hours: (day.daily_duration / 3600).toFixed(1) })}
                             </p>
                           ) : !day.have_entries ? (
                             <p className="text-xs text-muted-foreground">
-                              No entries
+                              {t('recentDaysCard.noEntries')}
                             </p>
                           ) : null}
                         </div>
@@ -130,7 +132,7 @@ export function RecentDaysCard({ recentDays = [], isLoading = false, weekDaysLis
                         onClick={() => handleAddEntry(day.day)}
                         className="text-xs"
                       >
-                        Add Entry
+                        {t('recentDaysCard.addEntry')}
                       </Button>
                     )}
                   </div>

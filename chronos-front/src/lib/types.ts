@@ -35,7 +35,8 @@ export interface UserInfo {
   monthly_goal?: number;
   daily_goal?: number;
   week_days_list?: string[];
-  theme?: string;
+  theme?: 'light' | 'dark' | 'system';
+  language?: 'en' | 'pt';
 }
 
 export interface UpdateUserRequest {
@@ -44,7 +45,8 @@ export interface UpdateUserRequest {
   monthly_goal?: number;
   daily_goal?: number;
   week_days_list?: string[];
-  theme?: string;
+  theme?: 'light' | 'dark' | 'system';
+  language?: 'en' | 'pt';
 }
 
 export interface UpdateUserResponse {
@@ -88,6 +90,7 @@ export interface Entry {
   datm_interval_start?: string;
   datm_interval_end?: string;
   project_name: string;
+  project_id: number;
   entrie_date: string;
 }
 

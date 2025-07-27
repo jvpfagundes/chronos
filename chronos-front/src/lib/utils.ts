@@ -5,7 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const formatDateToISO = (date: Date): string => {
+export function formatDateToISO(date: Date | null | undefined): string {
+  if (!date) {
+    return "";
+  }
   return date.toISOString().split('T')[0];
 };
 

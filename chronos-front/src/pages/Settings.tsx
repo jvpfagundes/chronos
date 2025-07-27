@@ -10,22 +10,14 @@ import { useTheme } from "@/components/layout/ThemeProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { authService } from "@/lib/auth-service";
-import { Settings as SettingsIcon, User, Clock, Palette, Save, Loader2 } from "lucide-react";
-
-const WEEKDAYS = [
-  { id: "monday", label: "Monday" },
-  { id: "tuesday", label: "Tuesday" },
-  { id: "wednesday", label: "Wednesday" },
-  { id: "thursday", label: "Thursday" },
-  { id: "friday", label: "Friday" },
-  { id: "saturday", label: "Saturday" },
-  { id: "sunday", label: "Sunday" },
-];
+import { Settings as SettingsIcon, User, Clock, Palette, Save, Loader2, Globe } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function Settings() {
+  const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
-  const { user: userInfo } = useAuth();
+  const { user: userInfo, updateUser } = useAuth();
   
   const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState({
@@ -36,6 +28,16 @@ export default function Settings() {
     dailyGoal: userInfo?.daily_goal?.toString() || "8",
     workingDays: userInfo?.week_days_list || ["monday", "tuesday", "wednesday", "thursday", "friday"],
   });
+
+  const WEEKDAYS = [
+    { id: "monday", label: t('weekdays.monday') },
+    { id: "tuesday", label: t('weekdays.tuesday') },
+    { id: "wednesday", label: t('weekdays.wednesday') },
+    { id: "thursday", label: t('weekdays.thursday') },
+    { id: "friday", label: t('weekdays.friday') },
+    { id: "saturday", label: t('weekdays.saturday') },
+    { id: "sunday", label: t('weekdays.sunday') },
+  ];
 
   useEffect(() => {
     if (userInfo) {
@@ -100,6 +102,24 @@ export default function Settings() {
     setTheme(newTheme);
   };
 
+  const handleLanguageChange = async (lng: 'en' | 'pt') => {
+    try {
+      await authService.updateUser({ language: lng });
+      updateUser({ ...userInfo!, language: lng });
+      i18n.changeLanguage(lng);
+      toast({
+        title: t('settings.languageChangedTitle', 'Language updated'),
+        description: t('settings.languageChangedDescription', 'Your language preference has been saved.'),
+      });
+    } catch (error) {
+      toast({
+        title: t('settings.error'),
+        description: error instanceof Error ? error.message : t('settings.errorDescription'),
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSave = async () => {
     try {
       setIsLoading(true);
@@ -108,8 +128,8 @@ export default function Settings() {
       
       if (Object.keys(changedData).length === 0) {
         toast({
-          title: "No changes",
-          description: "No changes to save.",
+          title: t('settings.noChanges'),
+          description: t('settings.noChangesDescription'),
         });
         return;
       }
@@ -117,13 +137,13 @@ export default function Settings() {
       await authService.updateUser(changedData);
       
       toast({
-        title: "Settings saved",
-        description: "Your preferences have been updated successfully.",
+        title: t('settings.success'),
+        description: t('settings.successDescription'),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save settings';
+      const errorMessage = error instanceof Error ? error.message : t('settings.errorDescription');
       toast({
-        title: "Error",
+        title: t('settings.error'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -136,9 +156,9 @@ export default function Settings() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col space-y-2">
-        <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold text-foreground">{t('settings.title')}</h1>
         <p className="text-muted-foreground text-sm md:text-base">
-          Customize your Chronos experience
+          {t('settings.description')}
         </p>
       </div>
 
@@ -148,16 +168,16 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <User className="h-5 w-5 text-primary" />
-              <span>Profile</span>
+              <span>{t('settings.profileTitle')}</span>
             </CardTitle>
             <CardDescription>
-              Update your personal information
+              {t('settings.profileDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">{t('settings.firstNameLabel')}</Label>
                 <Input
                   id="firstName"
                   value={settings.firstName}
@@ -165,7 +185,7 @@ export default function Settings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">{t('settings.lastNameLabel')}</Label>
                 <Input
                   id="lastName"
                   value={settings.lastName}
@@ -174,7 +194,7 @@ export default function Settings() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('settings.emailLabel')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -183,7 +203,7 @@ export default function Settings() {
                 className="bg-muted"
               />
               <p className="text-xs text-muted-foreground">
-                Email cannot be changed
+                {t('settings.emailCannotBeChanged')}
               </p>
             </div>
           </CardContent>
@@ -194,15 +214,15 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Palette className="h-5 w-5 text-primary" />
-              <span>Appearance</span>
+              <span>{t('settings.appearanceTitle')}</span>
             </CardTitle>
             <CardDescription>
-              Customize the look and feel
+              {t('settings.appearanceDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Theme</Label>
+              <Label>{t('settings.themeLabel')}</Label>
               <Select 
                 value={theme} 
                 onValueChange={handleThemeChange}
@@ -212,13 +232,34 @@ export default function Settings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
+                  <SelectItem value="light">{t('settings.themeLight')}</SelectItem>
+                  <SelectItem value="dark">{t('settings.themeDark')}</SelectItem>
+                  <SelectItem value="system">{t('settings.themeSystem')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Choose your preferred theme or follow system settings
+                {t('settings.themeDescription')}
+              </p>
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <Label>{t('settings.languageLabel', 'Language')}</Label>
+              <Select onValueChange={(value) => handleLanguageChange(value as 'en' | 'pt')} defaultValue={i18n.language}>
+                <SelectTrigger>
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      <span>{i18n.language === 'en' ? 'English' : 'Português'}</span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.languageDescription', 'Choose your preferred language')}
               </p>
             </div>
           </CardContent>
@@ -229,16 +270,16 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-primary" />
-              <span>Time Tracking</span>
+              <span>{t('settings.timeTrackingTitle')}</span>
             </CardTitle>
             <CardDescription>
-              Configure your tracking preferences
+              {t('settings.timeTrackingDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="monthly-goal">Monthly Goal (hours)</Label>
+                <Label htmlFor="monthly-goal">{t('settings.monthlyGoalLabel')}</Label>
                 <Input
                   id="monthly-goal"
                   type="number"
@@ -247,7 +288,7 @@ export default function Settings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="daily-goal">Daily Goal (hours)</Label>
+                <Label htmlFor="daily-goal">{t('settings.dailyGoalLabel')}</Label>
                 <Input
                   id="daily-goal"
                   type="number"
@@ -261,7 +302,7 @@ export default function Settings() {
             <Separator />
             
             <div className="space-y-3">
-              <Label>Working Days</Label>
+              <Label>{t('settings.workingDaysLabel')}</Label>
               <div className="grid grid-cols-2 gap-3">
                 {WEEKDAYS.map((day) => (
                   <div key={day.id} className="flex items-center space-x-2">
@@ -291,12 +332,12 @@ export default function Settings() {
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Saving...
+              {t('settings.savingButton')}
             </>
           ) : (
             <>
               <Save className="h-4 w-4 mr-2" />
-              Save Changes
+              {t('settings.saveButton')}
             </>
           )}
         </Button>

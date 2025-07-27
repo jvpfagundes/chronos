@@ -11,8 +11,9 @@ import { CalendarIcon, Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { dashboardService } from "@/lib/dashboard-service";
-import { Project, CreateEntryRequest, CreateProjectRequest } from "@/lib/types";
+import { Project, CreateEntryRequest, CreateProjectRequest, Entry } from "@/lib/types";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 interface TimeInputProps {
   value: string;
@@ -83,16 +84,17 @@ interface AddEntryModalProps {
   onClose: () => void;
   onSuccess: () => void;
   initialDate?: Date | null;
+  entryToEdit?: Entry | null;
 }
 
-export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEntryModalProps) {
+export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate, entryToEdit }: AddEntryModalProps) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   
-  // Form data
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     date: new Date(),
     title: "",
     description: "",
@@ -101,13 +103,18 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
     intervalStartTime: "",
     intervalEndTime: "",
     endTime: "",
-  });
+  };
+
+  // Form data
+  const [formData, setFormData] = useState(initialFormData);
 
   // New project form
   const [newProjectName, setNewProjectName] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const isEditMode = !!entryToEdit;
 
   // Load projects on mount
   useEffect(() => {
@@ -123,14 +130,37 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
     }
   }, [initialDate]);
 
+  useEffect(() => {
+    if (isEditMode && entryToEdit) {
+      const project = projects.find(p => p.name === entryToEdit.project_name);
+      setFormData({
+        date: new Date(entryToEdit.entrie_date),
+        title: entryToEdit.title,
+        description: entryToEdit.description || "",
+        projectId: project ? project.id.toString() : "",
+        startTime: format(new Date(entryToEdit.datm_start), "HH:mm"),
+        endTime: format(new Date(entryToEdit.datm_end), "HH:mm"),
+        intervalStartTime: entryToEdit.datm_interval_start ? format(new Date(entryToEdit.datm_interval_start), "HH:mm") : "",
+        intervalEndTime: entryToEdit.datm_interval_end ? format(new Date(entryToEdit.datm_interval_end), "HH:mm") : "",
+      });
+    } else {
+      const newFormData = { ...initialFormData };
+      if (initialDate) {
+        newFormData.date = initialDate;
+      }
+      setFormData(newFormData);
+    }
+  }, [entryToEdit, isEditMode, isOpen, initialDate, projects]);
+
+
   const loadProjects = async () => {
     try {
       const response = await dashboardService.getProjects();
       setProjects(response.projects_list);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load projects';
+      const errorMessage = error instanceof Error ? error.message : t('addEntryModal.failedToLoadProjects');
       toast({
-        title: "Error",
+        title: t("addEntryModal.error"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -140,8 +170,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) {
       toast({
-        title: "Error",
-        description: "Project name is required",
+        title: t("addEntryModal.error"),
+        description: t("addEntryModal.projectNameRequired"),
         variant: "destructive",
       });
       return;
@@ -153,8 +183,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
       await dashboardService.createProject(projectData);
       
       toast({
-        title: "Success",
-        description: "Project created successfully",
+        title: t("addEntryModal.success"),
+        description: t("addEntryModal.projectCreated"),
       });
       
       // Reload projects
@@ -170,9 +200,9 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
       setShowNewProjectForm(false);
       setNewProjectName("");
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create project';
+      const errorMessage = error instanceof Error ? error.message : t('addEntryModal.failedToCreateProject');
       toast({
-        title: "Error",
+        title: t("addEntryModal.error"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -185,8 +215,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
     // Validation
     if (!formData.title.trim()) {
       toast({
-        title: "Error",
-        description: "Title is required",
+        title: t("addEntryModal.error"),
+        description: t("addEntryModal.titleIsRequired"),
         variant: "destructive",
       });
       return;
@@ -194,8 +224,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
     if (!formData.projectId) {
       toast({
-        title: "Error",
-        description: "Please select a project",
+        title: t("addEntryModal.error"),
+        description: t("addEntryModal.projectIsRequired"),
         variant: "destructive",
       });
       return;
@@ -203,8 +233,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
     if (!formData.startTime || !formData.endTime) {
       toast({
-        title: "Error",
-        description: "Start and end times are required",
+        title: t("addEntryModal.error"),
+        description: t("addEntryModal.timesAreRequired"),
         variant: "destructive",
       });
       return;
@@ -214,8 +244,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(formData.startTime) || !timeRegex.test(formData.endTime)) {
       toast({
-        title: "Error",
-        description: "Please enter valid times in HH:MM format",
+        title: t("addEntryModal.error"),
+        description: t("addEntryModal.invalidTimeFormat"),
         variant: "destructive",
       });
       return;
@@ -224,8 +254,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
     // Validate time order
     if (formData.startTime >= formData.endTime) {
       toast({
-        title: "Error",
-        description: "End time must be after start time",
+        title: t("addEntryModal.error"),
+        description: t("addEntryModal.endTimeAfterStartTime"),
         variant: "destructive",
       });
       return;
@@ -235,8 +265,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
     if (formData.intervalStartTime && formData.intervalEndTime) {
       if (!timeRegex.test(formData.intervalStartTime) || !timeRegex.test(formData.intervalEndTime)) {
         toast({
-          title: "Error",
-          description: "Please enter valid interval times in HH:MM format",
+          title: t("addEntryModal.error"),
+          description: t("addEntryModal.invalidIntervalTimeFormat"),
           variant: "destructive",
         });
         return;
@@ -244,8 +274,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
       if (formData.intervalStartTime >= formData.intervalEndTime) {
         toast({
-          title: "Error",
-          description: "Interval end time must be after interval start time",
+          title: t("addEntryModal.error"),
+          description: t("addEntryModal.intervalEndTimeAfterStartTime"),
           variant: "destructive",
         });
         return;
@@ -253,8 +283,8 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
       if (formData.intervalStartTime <= formData.startTime || formData.intervalEndTime >= formData.endTime) {
         toast({
-          title: "Error",
-          description: "Interval must be within the task time range",
+          title: t("addEntryModal.error"),
+          description: t("addEntryModal.intervalWithinTaskTime"),
           variant: "destructive",
         });
         return;
@@ -263,55 +293,52 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
     setIsLoading(true);
     try {
-      // Create datetime strings
       const dateStr = format(formData.date, 'yyyy-MM-dd');
-      const startDateTime = `${dateStr}T${formData.startTime}:00`;
-      const endDateTime = `${dateStr}T${formData.endTime}:00`;
-      
-      const entryData: CreateEntryRequest = {
+
+      const entryPayload: CreateEntryRequest = {
         date: dateStr,
-        datm_start: startDateTime,
-        datm_end: endDateTime,
+        datm_start: `${dateStr}T${formData.startTime}:00`,
+        datm_end: `${dateStr}T${formData.endTime}:00`,
         title: formData.title.trim(),
         description: formData.description.trim(),
         project_id: parseInt(formData.projectId),
       };
 
-      // Add interval times if provided
-      if (formData.intervalStartTime && formData.intervalEndTime) {
-        entryData.datm_interval_start = `${dateStr}T${formData.intervalStartTime}:00`;
-        entryData.datm_interval_end = `${dateStr}T${formData.intervalEndTime}:00`;
+      if (formData.intervalStartTime) {
+        entryPayload.datm_interval_start = `${dateStr}T${formData.intervalStartTime}:00`;
+      }
+      if (formData.intervalEndTime) {
+        entryPayload.datm_interval_end = `${dateStr}T${formData.intervalEndTime}:00`;
       }
 
-      await dashboardService.createEntry(entryData);
+      if (isEditMode && entryToEdit) {
+        // PUT logic for editing
+        await dashboardService.updateEntry(entryToEdit.id, entryPayload);
+        toast({
+          title: t("addEntryModal.success"),
+          description: t("addEntryModal.entryUpdated"),
+        });
+      } else {
+        // POST logic for creating
+        await dashboardService.createEntry(entryPayload);
+        toast({
+          title: t("addEntryModal.success"),
+          description: t("addEntryModal.entryCreated"),
+        });
+      }
 
-      toast({
-        title: "Success",
-        description: "Entry created successfully",
-      });
-
-      // Reset form and close modal
-      setFormData({
-        date: new Date(),
-        title: "",
-        description: "",
-        projectId: "",
-        startTime: "",
-        intervalStartTime: "",
-        intervalEndTime: "",
-        endTime: "",
-      });
-
-      onSuccess();
-      onClose();
+      // Common success logic
       queryClient.invalidateQueries({ queryKey: ['entries'] });
       queryClient.invalidateQueries({ queryKey: ['entries-paginated'] });
       queryClient.invalidateQueries({ queryKey: ['entries-total-count'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+      onSuccess();
+      handleClose();
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create entry';
+      const errorMessage = error instanceof Error ? error.message : t(isEditMode ? 'addEntryModal.failedToUpdateEntry' : 'addEntryModal.failedToCreateEntry');
       toast({
-        title: "Error",
+        title: t("addEntryModal.error"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -322,16 +349,7 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
   const handleClose = () => {
     if (!isLoading) {
-      setFormData({
-        date: new Date(),
-        title: "",
-        description: "",
-        projectId: "",
-        startTime: "",
-        intervalStartTime: "",
-        intervalEndTime: "",
-        endTime: "",
-      });
+      setFormData(initialFormData);
       setShowNewProjectForm(false);
       setNewProjectName("");
       onClose();
@@ -342,13 +360,13 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] md:w-auto">
         <DialogHeader>
-          <DialogTitle>Add New Entry</DialogTitle>
+          <DialogTitle>{isEditMode ? t('addEntryModal.editTitle') : t('addEntryModal.addTitle')}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Date Selection */}
           <div className="space-y-2">
-            <Label>Date</Label>
+            <Label>{t('addEntryModal.dateLabel')}</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -356,7 +374,7 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.date ? format(formData.date, "PPP") : "Pick a date"}
+                  {formData.date ? format(formData.date, "PPP") : t('addEntryModal.pickDate')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -373,20 +391,20 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
           {/* Title and Description */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">{t('addEntryModal.titleLabel')}</Label>
               <Input
                 id="title"
-                placeholder="Enter task title"
+                placeholder={t('addEntryModal.titlePlaceholder')}
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t('addEntryModal.descriptionLabel')}</Label>
               <Textarea
                 id="description"
-                placeholder="Enter task description"
+                placeholder={t('addEntryModal.descriptionPlaceholder')}
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={3}
@@ -396,14 +414,14 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
 
           {/* Project Selection */}
           <div className="space-y-2">
-            <Label>Project *</Label>
+            <Label>{t('addEntryModal.projectLabel')}</Label>
             <div className="flex space-x-2">
               <Select
                 value={formData.projectId}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
               >
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select a project" />
+                  <SelectValue placeholder={t('addEntryModal.selectProjectPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map((project) => (
@@ -427,11 +445,11 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
           {/* New Project Form */}
           {showNewProjectForm && (
             <div className="space-y-2 p-4 border rounded-lg bg-muted/50">
-              <Label htmlFor="newProject">New Project Name</Label>
+              <Label htmlFor="newProject">{t('addEntryModal.newProjectNameLabel')}</Label>
               <div className="flex space-x-2">
                 <Input
                   id="newProject"
-                  placeholder="Enter project name"
+                  placeholder={t('addEntryModal.newProjectNamePlaceholder')}
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                 />
@@ -444,7 +462,7 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
                   {isCreatingProject ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Create"
+                    t('addEntryModal.createButton')
                   )}
                 </Button>
                 <Button
@@ -456,7 +474,7 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
                   }}
                   size="sm"
                 >
-                  Cancel
+                  {t('addEntryModal.cancelButton')}
                 </Button>
               </div>
             </div>
@@ -465,25 +483,25 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
           {/* Time Fields */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <TimeInput
-              label="Start Time *"
+              label={t('addEntryModal.startTimeLabel')}
               value={formData.startTime}
               onChange={(value) => setFormData(prev => ({ ...prev, startTime: value }))}
               placeholder="09:00"
             />
             <TimeInput
-              label="Interval Start"
+              label={t('addEntryModal.intervalStartLabel')}
               value={formData.intervalStartTime}
               onChange={(value) => setFormData(prev => ({ ...prev, intervalStartTime: value }))}
               placeholder="12:00"
             />
             <TimeInput
-              label="Interval End"
+              label={t('addEntryModal.intervalEndLabel')}
               value={formData.intervalEndTime}
               onChange={(value) => setFormData(prev => ({ ...prev, intervalEndTime: value }))}
               placeholder="13:00"
             />
             <TimeInput
-              label="End Time *"
+              label={t('addEntryModal.endTimeLabel')}
               value={formData.endTime}
               onChange={(value) => setFormData(prev => ({ ...prev, endTime: value }))}
               placeholder="17:00"
@@ -498,7 +516,7 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
               onClick={handleClose}
               disabled={isLoading}
             >
-              Cancel
+              {t('addEntryModal.cancelButton')}
             </Button>
             <Button
               type="button"
@@ -509,10 +527,10 @@ export function AddEntryModal({ isOpen, onClose, onSuccess, initialDate }: AddEn
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {isEditMode ? t('addEntryModal.saving') : t('addEntryModal.creating')}
                 </>
               ) : (
-                "Create Entry"
+                isEditMode ? t('addEntryModal.saveChangesButton') : t('addEntryModal.createEntryButton')
               )}
             </Button>
           </div>

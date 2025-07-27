@@ -8,10 +8,19 @@ import { useDashboardFilter } from "@/hooks/use-dashboard-filter";
 import { DateRange } from "@/components/dashboard/DashboardFilter";
 import { formatDateLong, formatTime, formatDuration } from "@/lib/utils";
 import { DeleteEntryModal } from "./DeleteEntryModal";
+import { Entry } from "@/lib/types";
+import { useTranslation } from "react-i18next";
 
-export function EntriesTable() {
-  const { dateRange } = useDashboardFilter();
-  const { entries, isLoading, error, refetch } = useEntries(dateRange);
+export interface EntriesTableProps {
+  entries: Entry[];
+  onEdit: (entry: Entry) => void;
+  onDelete: (entryId: number, entryTitle: string) => void;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export function EntriesTable({ entries, onEdit, onDelete, isLoading, error }: EntriesTableProps) {
+  const { t } = useTranslation();
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     entryId: number;
@@ -22,20 +31,18 @@ export function EntriesTable() {
     entryTitle: "",
   });
 
-  const handleEdit = (entryId: number) => {
-    // TODO: Implement edit functionality
+  const handleEdit = (entry: Entry) => {
+    onEdit(entry);
   };
 
   const handleDelete = (entryId: number, entryTitle: string) => {
-    setDeleteModal({
-      isOpen: true,
-      entryId,
-      entryTitle,
-    });
+    onDelete(entryId, entryTitle);
   };
 
   const handleDeleteSuccess = () => {
-    refetch();
+    // This can now be handled by the parent component, 
+    // but for now we'll just close the modal.
+    handleCloseDeleteModal();
   };
 
   const handleCloseDeleteModal = () => {
@@ -52,7 +59,7 @@ export function EntriesTable() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-primary" />
-              <span>Recent Entries</span>
+              <span>{t('entriesTable.recentEntries')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -62,24 +69,24 @@ export function EntriesTable() {
                 </div>
             ) : error ? (
                 <div className="text-center py-8">
-                  <p className="text-destructive text-sm">Error loading entries: {error}</p>
+                  <p className="text-destructive text-sm">{t('entriesTable.errorLoading', { error: error })}</p>
                 </div>
             ) : entries.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">No entries found for this period</p>
+                  <p className="text-muted-foreground">{t('entriesTable.noEntriesFound')}</p>
                 </div>
             ) : (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="hidden md:table-cell">Date</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead className="hidden lg:table-cell">Description</TableHead>
-                        <TableHead className="hidden md:table-cell">Project</TableHead>
-                        <TableHead className="hidden lg:table-cell">Time</TableHead>
-                        <TableHead className="text-right">Duration</TableHead>
-                        <TableHead className="w-[100px]">Actions</TableHead>
+                        <TableHead className="hidden md:table-cell">{t('entriesTable.date')}</TableHead>
+                        <TableHead>{t('entriesTable.title')}</TableHead>
+                        <TableHead className="hidden lg:table-cell">{t('entriesTable.description')}</TableHead>
+                        <TableHead className="hidden md:table-cell">{t('entriesTable.project')}</TableHead>
+                        <TableHead className="hidden lg:table-cell">{t('entriesTable.time')}</TableHead>
+                        <TableHead className="text-right">{t('entriesTable.duration')}</TableHead>
+                        <TableHead className="w-[100px]">{t('entriesTable.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -96,7 +103,7 @@ export function EntriesTable() {
                                 </div>
                                 <div>
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-light text-primary">
-                              {entry.project_name || "No Project"}
+                              {entry.project_name || t('entriesTable.noProject')}
                             </span>
                                 </div>
                               </div>
@@ -106,7 +113,7 @@ export function EntriesTable() {
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-light text-primary">
-                          {entry.project_name || "No Project"}
+                          {entry.project_name || t('entriesTable.noProject')}
                         </span>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground hidden lg:table-cell">
@@ -114,7 +121,7 @@ export function EntriesTable() {
                                 <div>{formatTime(entry.datm_start)}–{formatTime(entry.datm_end)}</div>
                                 {entry.datm_interval_start && entry.datm_interval_end && (
                                     <div className="text-xs text-muted-foreground">
-                                      Break: {formatTime(entry.datm_interval_start)}–{formatTime(entry.datm_interval_end)}
+                                      {t('entriesTable.break', { start: formatTime(entry.datm_interval_start), end: formatTime(entry.datm_interval_end) })}
                                     </div>
                                 )}
                               </div>
@@ -127,7 +134,7 @@ export function EntriesTable() {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleEdit(entry.id)}
+                                    onClick={() => handleEdit(entry)}
                                     className="h-7 w-7 md:h-8 md:w-8 p-0"
                                 >
                                   <Edit2 className="h-3 w-3 md:h-4 md:w-4" />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -16,8 +16,11 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "./ThemeProvider";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { useDebounce } from "@/hooks/use-debounce";
+import { authService } from "@/lib/auth-service";
 
-const navigation = [
+const oldNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "My Entries", href: "/entries", icon: Clock },
   { name: "Settings", href: "/settings", icon: Settings },
@@ -32,14 +35,31 @@ export function Sidebar({ onClose }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { logout, user } = useAuth();
+  const { logout, user, updateUser } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const debouncedTheme = useDebounce(theme, 500);
+
+  useEffect(() => {
+    const updateThemePreference = async () => {
+      if (debouncedTheme && user && user.theme !== debouncedTheme) {
+        try {
+          await authService.updateUser({ theme: debouncedTheme });
+          updateUser({ ...user, theme: debouncedTheme });
+        } catch (error) {
+          // Silently handle error, or show a toast
+        }
+      }
+    };
+    updateThemePreference();
+  }, [debouncedTheme, user, updateUser]);
 
   const handleLogout = () => {
     logout();
     toast({
-      title: "Logout successful",
-      description: "You have been logged out successfully.",
+      title: t('sidebar.logoutSuccessTitle', 'Logout successful'),
+      description: t('sidebar.logoutSuccessDescription', 'You have been logged out successfully.'),
     });
     navigate("/login");
   };
@@ -64,6 +84,16 @@ export function Sidebar({ onClose }: SidebarProps) {
         return <Monitor className="h-4 w-4" />;
     }
   };
+
+  const menuItems = [
+    {
+      name: t("sidebar.dashboard"),
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    { name: t("sidebar.entries"), href: "/entries", icon: Clock },
+    { name: t("sidebar.settings"), href: "/settings", icon: Settings },
+  ];
 
   return (
       <div className={`chronos-sidebar h-full flex flex-col transition-all duration-300 ${
@@ -114,7 +144,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         <div className="flex-1 flex flex-col overflow-y-auto md:overflow-y-hidden">
           {/* Navigation */}
           <nav className="p-4 space-y-2 md:flex-1">
-            {navigation.map((item) => {
+            {menuItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                   <NavLink
@@ -166,7 +196,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 }`}
             >
               {getThemeIcon()}
-              {!collapsed && <span className="ml-3">Theme</span>}
+              {!collapsed && <span className="ml-3">{t('sidebar.theme', 'Theme')}</span>}
             </Button>
 
             <Button
@@ -178,7 +208,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 }`}
             >
               <LogOut className={`h-4 w-4 ${collapsed ? "" : "mr-3"}`} />
-              {!collapsed && <span>Log Out</span>}
+              {!collapsed && <span>{t('sidebar.logout', 'Log Out')}</span>}
             </Button>
           </div>
         </div>

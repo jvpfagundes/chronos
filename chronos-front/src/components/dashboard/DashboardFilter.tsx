@@ -5,38 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Filter, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { formatDateToISO } from "@/lib/utils";
-
-export type TimeFilterPeriod = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
-
-export interface DateRange {
-  startDate: Date;
-  endDate: Date;
-}
+import { useTranslation } from "react-i18next";
+import { TimeFilterPeriod } from "@/hooks/use-dashboard-filter";
+import { DateRange } from "react-day-picker";
 
 interface DashboardFilterProps {
   selectedPeriod: TimeFilterPeriod;
   onPeriodChange: (period: TimeFilterPeriod) => void;
-  dateRange: DateRange;
-  onDateRangeChange: (range: DateRange) => void;
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
 }
-
-const filterOptions = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'biweekly', label: 'Bi-weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'yearly', label: 'Yearly' },
-  { value: 'custom', label: 'Custom Range' },
-] as const;
-
-const months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
-
-const currentYear = new Date().getFullYear();
-const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 export function DashboardFilter({
                                   selectedPeriod,
@@ -44,8 +22,9 @@ export function DashboardFilter({
                                   dateRange,
                                   onDateRangeChange
                                 }: DashboardFilterProps) {
+  const { t } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedQuarter, setSelectedQuarter] = useState(1);
 
@@ -116,19 +95,37 @@ export function DashboardFilter({
         break;
 
       default:
-        newStartDate = dateRange.startDate;
-        newEndDate = dateRange.endDate;
+        newStartDate = dateRange?.from || new Date();
+        newEndDate = dateRange?.to || new Date();
     }
 
-    onDateRangeChange({ startDate: newStartDate, endDate: newEndDate });
+    onDateRangeChange({ from: newStartDate, to: newEndDate });
   }, [selectedPeriod, selectedMonth, selectedYear, selectedWeek, selectedQuarter]);
+
+  const filterOptions = [
+    { value: 'daily', label: t('dashboardFilter.daily') },
+    { value: 'weekly', label: t('dashboardFilter.weekly') },
+    { value: 'biweekly', label: t('dashboardFilter.biweekly') },
+    { value: 'monthly', label: t('dashboardFilter.monthly') },
+    { value: 'quarterly', label: t('dashboardFilter.quarterly') },
+    { value: 'yearly', label: t('dashboardFilter.yearly') },
+    { value: 'custom', label: t('dashboardFilter.custom') },
+  ] as const;
+
+  const months = [
+    t('months.january'), t('months.february'), t('months.march'), t('months.april'), t('months.may'), t('months.june'),
+    t('months.july'), t('months.august'), t('months.september'), t('months.october'), t('months.november'), t('months.december')
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   return (
       <Card className="chronos-card">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Filter className="h-5 w-5 text-primary" />
-            <span>Time Period Filter</span>
+            <span>{t('dashboardFilter.title')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -137,11 +134,11 @@ export function DashboardFilter({
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Period:</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.periodLabel')}</span>
               </div>
               <Select value={selectedPeriod} onValueChange={(value: TimeFilterPeriod) => onPeriodChange(value)}>
                 <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Select period" />
+                  <SelectValue placeholder={t('dashboardFilter.selectPeriodPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {filterOptions.map((option) => (
@@ -157,7 +154,7 @@ export function DashboardFilter({
             {selectedPeriod === 'monthly' && (
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-muted-foreground">Month:</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.monthLabel')}</span>
                     <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
                       <SelectTrigger className="w-full sm:w-[140px]">
                         <SelectValue />
@@ -172,7 +169,7 @@ export function DashboardFilter({
                     </Select>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-muted-foreground">Year:</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.yearLabel')}</span>
                     <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
                       <SelectTrigger className="w-full sm:w-[100px]">
                         <SelectValue />
@@ -192,7 +189,7 @@ export function DashboardFilter({
             {selectedPeriod === 'quarterly' && (
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-muted-foreground">Quarter:</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.quarterLabel')}</span>
                     <Select value={selectedQuarter.toString()} onValueChange={(value) => setSelectedQuarter(parseInt(value))}>
                       <SelectTrigger className="w-full sm:w-[100px]">
                         <SelectValue />
@@ -206,7 +203,7 @@ export function DashboardFilter({
                     </Select>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-muted-foreground">Year:</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.yearLabel')}</span>
                     <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
                       <SelectTrigger className="w-full sm:w-[100px]">
                         <SelectValue />
@@ -226,7 +223,7 @@ export function DashboardFilter({
             {selectedPeriod === 'yearly' && (
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-muted-foreground">Year:</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.yearLabel')}</span>
                     <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
                       <SelectTrigger className="w-[100px]">
                         <SelectValue />
@@ -246,25 +243,25 @@ export function DashboardFilter({
             {selectedPeriod === 'custom' && (
                 <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-muted-foreground">From:</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.fromLabel')}</span>
                     <Input
                         type="date"
-                        value={formatDateToISO(dateRange.startDate)}
+                        value={dateRange?.from ? formatDateToISO(dateRange.from) : ''}
                         onChange={(e) => {
                           const newStartDate = new Date(e.target.value);
-                          onDateRangeChange({ ...dateRange, startDate: newStartDate });
+                          onDateRangeChange({ from: newStartDate, to: dateRange?.to });
                         }}
                         className="w-full sm:w-[150px]"
                     />
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-muted-foreground">To:</span>
+                    <span className="text-sm font-medium text-muted-foreground">{t('dashboardFilter.toLabel')}</span>
                     <Input
                         type="date"
-                        value={formatDateToISO(dateRange.endDate)}
+                        value={dateRange?.to ? formatDateToISO(dateRange.to) : ''}
                         onChange={(e) => {
                           const newEndDate = new Date(e.target.value);
-                          onDateRangeChange({ ...dateRange, endDate: newEndDate });
+                          onDateRangeChange({ from: dateRange?.from, to: newEndDate });
                         }}
                         className="w-full sm:w-[150px]"
                     />
@@ -274,9 +271,9 @@ export function DashboardFilter({
 
             {/* Date Range Display */}
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>Showing data from:</span>
+              <span>{t('dashboardFilter.showingData')}</span>
               <span className="font-medium">
-              {dateRange.startDate.toLocaleDateString()} to {dateRange.endDate.toLocaleDateString()}
+              {dateRange?.from?.toLocaleDateString()} {t('dashboardFilter.to')} {dateRange?.to?.toLocaleDateString()}
             </span>
             </div>
           </div>

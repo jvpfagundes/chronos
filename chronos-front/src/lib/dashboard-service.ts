@@ -98,7 +98,14 @@ class DashboardService {
     }
   }
 
-  async getEntriesPaginated(offset: number, limit: number, requireTotalCount: boolean = false): Promise<EntriesResponse> {
+  async getEntriesPaginated(
+    offset: number, 
+    limit: number, 
+    search?: string, 
+    dat_start?: string,
+    dat_end?: string,
+    requireTotalCount: boolean = false
+  ): Promise<EntriesResponse> {
     try {
       const queryParams = new URLSearchParams({
         offset: offset.toString(),
@@ -108,11 +115,19 @@ class DashboardService {
       if (requireTotalCount) {
         queryParams.append('require_total_count', 'true');
       }
+      if (search) {
+        queryParams.append('search', search);
+      }
+      if (dat_start) {
+        queryParams.append('dat_start', dat_start);
+      }
+      if (dat_end) {
+        queryParams.append('dat_end', dat_end);
+      }
       
       const response = await apiClient.get<EntriesResponse>(`/api/entries/?${queryParams}`);
       return response;
     } catch (error) {
-
       throw error;
     }
   }
@@ -141,6 +156,14 @@ class DashboardService {
       await apiClient.post('/api/entries/', entryData);
     } catch (error) {
 
+      throw error;
+    }
+  }
+
+  async updateEntry(entryId: number, entryData: CreateEntryRequest): Promise<void> {
+    try {
+      await apiClient.put(`/api/entries/?entry_id=${entryId}`, entryData);
+    } catch (error) {
       throw error;
     }
   }

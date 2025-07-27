@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import { Clock, Target, Calendar, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const WEEKDAYS = [
   { id: "monday", label: "Monday" },
@@ -20,6 +21,7 @@ const WEEKDAYS = [
 ];
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,6 +29,16 @@ export default function Onboarding() {
     dailyHours: "",
     workingDays: [] as string[],
   });
+
+  const WEEKDAYS = [
+    { id: "monday", label: t('weekdays.monday') },
+    { id: "tuesday", label: t('weekdays.tuesday') },
+    { id: "wednesday", label: t('weekdays.wednesday') },
+    { id: "thursday", label: t('weekdays.thursday') },
+    { id: "friday", label: t('weekdays.friday') },
+    { id: "saturday", label: t('weekdays.saturday') },
+    { id: "sunday", label: t('weekdays.sunday') },
+  ];
 
   const { toast } = useToast();
   const { completeOnboarding } = useAuth();
@@ -69,8 +81,8 @@ export default function Onboarding() {
       });
 
       toast({
-        title: "Welcome to Chronos!",
-        description: "Your preferences have been saved. Redirecting to dashboard...",
+        title: t('onboarding.welcomeToastTitle'),
+        description: t('onboarding.welcomeToastDescription'),
       });
 
 
@@ -81,10 +93,10 @@ export default function Onboarding() {
 
       
 
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao salvar preferências.';
+      const errorMessage = error instanceof Error ? error.message : t('onboarding.errorToastDescription');
       
       toast({
-        title: "Error",
+        title: t('onboarding.errorToastTitle'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -124,10 +136,10 @@ export default function Onboarding() {
             />
           </div>
           <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
-            Let's set up your workspace
+            {t('onboarding.setupWorkspaceTitle')}
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Help us customize Chronos to fit your working style
+            {t('onboarding.setupWorkspaceDescription')}
           </p>
           
           {/* Progress Bar */}
@@ -153,14 +165,14 @@ export default function Onboarding() {
               {step === 3 && <Calendar className="h-6 w-6 text-primary" />}
               <div>
                 <CardTitle>
-                  {step === 1 && "Monthly Goal"}
-                  {step === 2 && "Daily Work Hours"}
-                  {step === 3 && "Working Days"}
+                  {step === 1 && t('onboarding.monthlyGoalTitle')}
+                  {step === 2 && t('onboarding.dailyHoursTitle')}
+                  {step === 3 && t('onboarding.workingDaysTitle')}
                 </CardTitle>
                 <CardDescription>
-                  {step === 1 && "Set your monthly time tracking goal"}
-                  {step === 2 && "Define your default daily working hours"}
-                  {step === 3 && "Select your preferred working days"}
+                  {step === 1 && t('onboarding.monthlyGoalDescription')}
+                  {step === 2 && t('onboarding.dailyHoursDescription')}
+                  {step === 3 && t('onboarding.workingDaysDescription')}
                 </CardDescription>
               </div>
             </div>
@@ -170,16 +182,16 @@ export default function Onboarding() {
             {step === 1 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="monthly-goal">Monthly Goal (in hours)</Label>
+                  <Label htmlFor="monthly-goal">{t('onboarding.monthlyGoalLabel')}</Label>
                   <Input
                     id="monthly-goal"
                     type="number"
-                    placeholder="e.g., 160"
+                    placeholder={t('onboarding.monthlyGoalPlaceholder')}
                     value={formData.monthlyGoal}
                     onChange={(e) => setFormData({ ...formData, monthlyGoal: e.target.value })}
                   />
                   <p className="text-sm text-muted-foreground">
-                    This helps us track your progress and provide insights
+                    {t('onboarding.monthlyGoalHelpText')}
                   </p>
                 </div>
               </div>
@@ -188,17 +200,17 @@ export default function Onboarding() {
             {step === 2 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="daily-hours">Default Daily Work Hours</Label>
+                  <Label htmlFor="daily-hours">{t('onboarding.dailyHoursLabel')}</Label>
                   <Input
                     id="daily-hours"
                     type="number"
                     step="0.5"
-                    placeholder="e.g., 8"
+                    placeholder={t('onboarding.dailyHoursPlaceholder')}
                     value={formData.dailyHours}
                     onChange={(e) => setFormData({ ...formData, dailyHours: e.target.value })}
                   />
                   <p className="text-sm text-muted-foreground">
-                    This will be used as the default when creating new entries
+                    {t('onboarding.dailyHoursHelpText')}
                   </p>
                 </div>
               </div>
@@ -206,7 +218,7 @@ export default function Onboarding() {
 
             {step === 3 && (
               <div className="space-y-4">
-                <Label>Select your preferred working days</Label>
+                <Label>{t('onboarding.workingDaysLabel')}</Label>
                 <div className="grid grid-cols-2 gap-4">
                   {WEEKDAYS.map((day) => (
                     <div key={day.id} className="flex items-center space-x-2">
@@ -222,7 +234,7 @@ export default function Onboarding() {
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  This helps us understand your work schedule and provide better insights
+                  {t('onboarding.workingDaysHelpText')}
                 </p>
               </div>
             )}
@@ -234,7 +246,7 @@ export default function Onboarding() {
                 onClick={handleBack}
                 disabled={step === 1}
               >
-                Back
+                {t('onboarding.backButton')}
               </Button>
               
               {step < 3 ? (
@@ -243,7 +255,7 @@ export default function Onboarding() {
                   disabled={!isStepValid()}
                   className="chronos-button-primary"
                 >
-                  Next
+                  {t('onboarding.nextButton')}
                 </Button>
               ) : (
                 <Button
@@ -254,12 +266,12 @@ export default function Onboarding() {
                   {isSubmitting ? (
                     <>
                       <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Setting up...
+                      {t('onboarding.settingUpButton')}
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Finish Setup
+                      {t('onboarding.finishButton')}
                     </>
                   )}
                 </Button>

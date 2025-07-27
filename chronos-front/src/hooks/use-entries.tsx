@@ -1,60 +1,29 @@
-import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { dashboardService, DashboardData } from '@/lib/dashboard-service';
-import { DateRange, TimeFilterPeriod } from '@/components/dashboard/DashboardFilter';
+import { dashboardService } from '@/lib/dashboard-service';
 import { formatDateToISO } from '@/lib/utils';
+import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
-export function useDashboardData(dateRange: DateRange, selectedPeriod: TimeFilterPeriod, weekDaysList: string[] = []) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const {
-    data: dashboardData,
-    isLoading: queryLoading,
-    error: queryError,
-    refetch,
-  } = useQuery({
-    queryKey: ['dashboard-data', formatDateToISO(dateRange.startDate), formatDateToISO(dateRange.endDate), selectedPeriod, weekDaysList],
-    queryFn: () => dashboardService.getDashboardData(
-      formatDateToISO(dateRange.startDate),
-      formatDateToISO(dateRange.endDate),
-      weekDaysList
-    ),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  const refreshData = useCallback(() => {
-    refetch();
-  }, [refetch]);
-
-  useEffect(() => {
-    setIsLoading(queryLoading);
-    setError(queryError ? (queryError as Error).message : null);
-  }, [queryLoading, queryError]);
-
-  return {
-    data: dashboardData,
-    isLoading,
-    error,
-    refreshData,
-  };
-}
-
-export function useEntries(dateRange: DateRange) {
+export function useEntries(dateRange: DateRange | undefined) {
   const {
     data: entriesData,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['entries', formatDateToISO(dateRange.startDate), formatDateToISO(dateRange.endDate)],
-    queryFn: () => dashboardService.getEntries(
-      formatDateToISO(dateRange.startDate),
-      formatDateToISO(dateRange.endDate)
-    ),
+    queryKey: ['entries', dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
+    queryFn: () => {
+      if (!dateRange?.from || !dateRange?.to) {
+        return Promise.resolve({ entries_list: [] });
+      }
+      return dashboardService.getEntries(
+        formatDateToISO(dateRange.from),
+        formatDateToISO(dateRange.to)
+      )
+    },
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
+    enabled: !!dateRange?.from && !!dateRange?.to,
   });
 
   return {
@@ -67,14 +36,22 @@ export function useEntries(dateRange: DateRange) {
   };
 }
 
-export function useEntriesPaginated(offset: number, limit: number) {
+export function useEntriesPaginated(
+    offset: number,
+    limit: number,
+    search?: string,
+    dateRange?: { from?: Date; to?: Date }
+) {
   const queryClient = useQueryClient();
+
+  const dat_start = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined;
+  const dat_end = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined;
 
   const {
     data: totalCountData,
   } = useQuery({
-    queryKey: ['entries-total-count'],
-    queryFn: () => dashboardService.getEntriesPaginated(0, 1, true),
+    queryKey: ['entries-total-count', search, dat_start, dat_end],
+    queryFn: () => dashboardService.getEntriesPaginated(0, 1, search, dat_start, dat_end, true),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     enabled: true,
@@ -86,8 +63,8 @@ export function useEntriesPaginated(offset: number, limit: number) {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['entries-paginated', offset, limit],
-    queryFn: () => dashboardService.getEntriesPaginated(offset, limit, false),
+    queryKey: ['entries-paginated', offset, limit, search, dat_start, dat_end],
+    queryFn: () => dashboardService.getEntriesPaginated(offset, limit, search, dat_start, dat_end, false),
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
