@@ -36,6 +36,7 @@ class SQLQueryAsync:
                     await session.commit()
                     return None
             except Exception as e:
+                print(e)
                 await session.rollback()
                 raise e
 
