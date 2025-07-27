@@ -17,11 +17,12 @@ async def get_entries(dat_start: str = Query(None, alias="dat_start"),
                       limit: int = Query(None, alias="limit"),
                       offset: int = Query(None, alias="offset"),
                       require_total_count: bool = Query(False, alias="require_total_count"),
+                      search: str = Query(None, alias="search"),
                       current_user: User = Depends(get_current_user)):
     user_id = current_user.get('id')
 
     response = await Entries(user_id).get_entries(dat_start=dat_start, dat_end=dat_end, limit=limit, offset=offset,
-                                                  require_total_count=require_total_count)
+                                                  require_total_count=require_total_count, search=search)
 
     return JSONResponse(content=response, status_code=response['status_code'])
 
@@ -45,6 +46,17 @@ async def delete_entry(entry_id: int, current_user: User = Depends(get_current_u
     response = await Entries(user_id).soft_delete_entry(entry_id=entry_id)
 
     return JSONResponse(content=response, status_code=response['status_code'])
+
+
+@router.put('/')
+async def put_entry(entry_id: int, entry_data: EntriesSchema, current_user: User = Depends(get_current_user)):
+    user_id = current_user.get('id')
+
+    response = await Entries(user_id).put_entry(entry_id=entry_id, entry_data=entry_data)
+
+
+    return JSONResponse(content=response, status_code=response['status_code'])
+
 
 @router.get("/streak")
 async def get_entries_streak(current_user: User = Depends(get_current_user)):

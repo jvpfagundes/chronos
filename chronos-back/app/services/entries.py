@@ -9,7 +9,7 @@ class Entries(SQLQueryAsync):
         self.user_id = user_id
 
     @Response(desc_error="Error when fetching entries.", return_list=['entries_list', "total_count"])
-    async def get_entries(self, dat_start, dat_end, limit, offset, require_total_count):
+    async def get_entries(self, dat_start, dat_end, limit, offset, require_total_count, search):
         pagination = f""
         filter = f""
         if limit:
@@ -20,6 +20,10 @@ class Entries(SQLQueryAsync):
         if dat_start and dat_end:
             filter += f"and e.date between :dat_start and :dat_end"
             dat_start, dat_end = str_to_date(dat_start=dat_start, dat_end=dat_end)
+
+        if search:
+            search = f"%{search.lower()}%"
+            filter += f" and (lower(e.title) LIKE :search or lower(e.description) LIKE :search)"
 
         query = f"""
         select e.id,
@@ -42,7 +46,8 @@ class Entries(SQLQueryAsync):
         {pagination} 
         """
 
-        ls_entries = await self.select(query, parameters=dict(dat_start=dat_start, dat_end=dat_end, user_id=self.user_id))
+        ls_entries = await self.select(query, parameters=dict(dat_start=dat_start, dat_end=dat_end, user_id=self.user_id,
+                                                              search=search))
 
         if require_total_count:
             total_count = await self.select(query="""select count(id) 
@@ -102,6 +107,39 @@ class Entries(SQLQueryAsync):
         """, parameters=dict(user_id=self.user_id, entry_id=entry_id), is_first=True, is_values_list=True) or False
 
 
+    @Response(desc_error="Error editing entry.", return_list=[])
+    async def put_entry(self, entry_id, entry_data):
+        if await self.validate_entry_user(entry_id):
+            if entry_data.datm_interval_start:
+                datm_interval_start, datm_interval_end = str_to_datetime(datm_interval_start=entry_data.datm_interval_start,
+                                                                         datm_interval_end=entry_data.datm_interval_end)
+                interval_duration = (datm_interval_end - datm_interval_start).seconds
+            else:
+                interval_duration = 0
+
+            datm_start, datm_end = str_to_datetime(datm_start=entry_data.datm_start, datm_end=entry_data.datm_end)
+
+            duration = (datm_end - datm_start).seconds - interval_duration
+
+            dict_patch = {
+                'title': entry_data.title,
+                'description': entry_data.description,
+                'duration': duration,
+                'datm_start': str_to_datetime(datm_start=entry_data.datm_start),
+                'datm_end': str_to_datetime(datm_end=entry_data.datm_end),
+                'datm_interval_start': str_to_datetime(datm_interval_start=entry_data.datm_interval_start) if \
+                    entry_data.datm_interval_start else None,
+                'datm_interval_end': str_to_datetime(datm_interval_end=entry_data.datm_interval_end) if\
+                    entry_data.datm_interval_end else None,
+                'project_id': entry_data.project_id,
+                "date": str_to_date(entry_date=entry_data.date) if entry_data.date else None,
+            }
+
+            dict_patch = {k:v for k, v in dict_patch.items() if v is not None}
+
+            await self.update("entries", dict_patch, dict_filter={"id": entry_id})
+        else:
+            raise ValidationError("You do not have permission to update this entry.", status_code=401)
 
 
     @Response(desc_error="Error when fetching cards.", return_list=["cards_dict"])

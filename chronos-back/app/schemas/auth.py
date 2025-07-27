@@ -21,8 +21,8 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    daily_goal: Optional[str] = None
-    monthly_goal: Optional[str] = None
+    daily_goal: Optional[int] = None
+    monthly_goal: Optional[int] = None
     week_days_list: Optional[list[str]] = None
     theme: Optional[str] = None
 
