@@ -89,7 +89,7 @@ export default function Login() {
       return;
     }
 
-    if (!signUpData.first_name || !signUpData.last_name || !signUpData.email || !signUpData.birth_date || !signUpData.password) {
+    if (!signUpData.first_name || !signUpData.last_name || !signUpData.email || !birthDate || !signUpData.password) {
       toast({
         title: "Error",
         description: "Please fill in all fields.",
@@ -285,7 +285,8 @@ export default function Login() {
                       <DatePicker
                         date={birthDate}
                         setDate={setBirthDate}
-                        placeholder={t('login.birthDatePlaceholder', 'Select your birth date')}
+                        placeholder={t("login.birthDatePlaceholder")}
+                        disabled={(date) => date > new Date()}
                       />
                     </div>
                     <div className="space-y-2">
